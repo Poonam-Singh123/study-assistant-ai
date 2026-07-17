@@ -4,7 +4,7 @@ import { cn } from '../lib/utils';
 import QuizResults from './QuizResults';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function QuizView({ initialQuiz }) {
+export default function QuizView({ initialQuiz, onComplete }) {
     const [quizList, setQuizList] = useState(initialQuiz);
     const [currentIdx, setCurrentIdx] = useState(0);
     const [answers, setAnswers] = useState({}); // idx -> selectedOptionIndex
@@ -25,6 +25,9 @@ export default function QuizView({ initialQuiz }) {
         if (currentIdx < quizList.length - 1) {
             setCurrentIdx(currentIdx + 1);
         } else {
+            if (onComplete) {
+                onComplete({ quizList, answers });
+            }
             setShowResults(true);
         }
     };
@@ -46,6 +49,7 @@ export default function QuizView({ initialQuiz }) {
     };
 
     useEffect(() => {
+        setQuizList(initialQuiz);
         resetQuiz(initialQuiz);
     }, [initialQuiz]);
 
