@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Sparkles, ShieldCheck } from 'lucide-react';
 
-export default function HeroSection({ onGetStarted }) {
+export default function HeroSection() {
   return (
     <section className="relative overflow-hidden rounded-[2rem] border border-slate-800/70 bg-slate-950/90 px-6 py-12 shadow-[0_40px_120px_rgba(15,23,42,0.4)] sm:px-10 sm:py-16">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.2),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.15),_transparent_25%)]" />
@@ -26,13 +26,12 @@ export default function HeroSection({ onGetStarted }) {
               </p>
             </div>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <button
-                type="button"
-                onClick={onGetStarted}
+              <a
+                href="#study"
                 className="inline-flex items-center justify-center rounded-2xl bg-indigo-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-400"
               >
                 Get Started
-              </button>
+              </a>
               <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-700/70 bg-slate-900/90 px-5 py-3 text-sm text-slate-300">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 Gemini API-powered generation

@@ -8,29 +8,20 @@ import LoadingState from './components/LoadingState';
 import ErrorState from './components/ErrorState';
 import FlashcardView from './components/FlashcardView';
 import QuizView from './components/QuizView';
-import StudyDetailsPage from './components/StudyDetailsPage';
 import { useGenerateStudySet } from './hooks/useGenerateStudySet';
 
 function App() {
   const { generate, data, loading, error, clearData, setError } = useGenerateStudySet();
-  const [activeTab, setActiveTab] = useState('hero');
+  const [activeTab, setActiveTab] = useState('flashcards');
   const [lastInput, setLastInput] = useState('');
-  const [quizResults, setQuizResults] = useState(null);
-  const [quizOverride, setQuizOverride] = useState(null);
-  const [studyDetails, setStudyDetails] = useState(null);
 
   const handleGenerate = (text) => {
     setLastInput(text);
-    setQuizResults(null);
-    setQuizOverride(null);
-    setStudyDetails(null);
     generate(text);
   };
 
   const handleRetry = () => {
     if (lastInput.trim()) {
-      setQuizResults(null);
-      setQuizOverride(null);
       generate(lastInput);
     }
   };
@@ -38,51 +29,6 @@ function App() {
   const handleReset = () => {
     clearData();
     setError(null);
-    setQuizResults(null);
-    setQuizOverride(null);
-    setActiveTab('hero');
-    setStudyDetails(null);
-  };
-
-  const handleStartDetails = () => {
-    setActiveTab('details');
-  };
-
-  const handleProceedFromDetails = ({ topic, notes }) => {
-    setStudyDetails({ topic, notes });
-    setActiveTab('study');
-    setLastInput(notes);
-    setQuizResults(null);
-    setQuizOverride(null);
-    generate(notes);
-  };
-
-  const handleQuizComplete = ({ quizList, answers }) => {
-    setQuizResults({ quizList, answers });
-    setActiveTab('results');
-    window.history.replaceState(null, '', '#results');
-  };
-
-  const handleRetryQuizAll = () => {
-    setQuizResults(null);
-    setQuizOverride(data?.quiz ?? null);
-    setActiveTab('quiz');
-    window.history.replaceState(null, '', '#quiz');
-  };
-
-  const handleRetryQuizWrong = () => {
-    if (!quizResults) return;
-    const wrongQuestions = quizResults.quizList.filter((q, idx) => quizResults.answers[idx] !== q.correctIndex);
-    setQuizResults(null);
-    setQuizOverride(wrongQuestions.length > 0 ? wrongQuestions : data?.quiz ?? null);
-    setActiveTab('quiz');
-    window.history.replaceState(null, '', '#quiz');
-  };
-
-  const handleReturnToStudy = () => {
-    setQuizResults(null);
-    setActiveTab('flashcards');
-    window.history.replaceState(null, '', '#study');
   };
 
   return (
@@ -92,21 +38,16 @@ function App() {
       <div className="absolute inset-x-0 top-0 h-96 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.18),_transparent_40%),radial-gradient(circle_at_top_right,_rgba(168,85,247,0.12),_transparent_30%)] pointer-events-none" />
 
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 pb-16 pt-8 sm:px-8 lg:px-10">
-        {activeTab === 'hero' && <HeroSection onGetStarted={handleStartDetails} />}
-        {activeTab === 'details' && !data && (
-          <StudyDetailsPage onProceed={handleProceedFromDetails} />
-        )}
+        <HeroSection />
 
         <section id="study" className="space-y-8">
-          {activeTab === 'study' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-            >
-              <InputPanel onGenerate={handleGenerate} loading={loading} />
-            </motion.div>
-          )}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          >
+            <InputPanel onGenerate={handleGenerate} loading={loading} />
+          </motion.div>
 
           <div className="min-h-[480px]">
             <AnimatePresence mode="wait">
@@ -122,13 +63,13 @@ function App() {
                 </motion.div>
               )}
 
-              {!loading && !error && !data && activeTab !== 'details' && (
+              {!loading && !error && !data && (
                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <EmptyState />
                 </motion.div>
               )}
 
-              {!loading && !error && data && activeTab !== 'details' && (
+              {!loading && !error && data && (
                 <motion.div
                   key="content"
                   initial={{ opacity: 0, y: 30 }}
@@ -163,31 +104,10 @@ function App() {
                   </div>
 
                   <div className="relative">
-                    {activeTab === 'results' && quizResults ? (
-                      <div className="space-y-6">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="text-sm uppercase tracking-[0.26em] text-indigo-400">Quiz complete</p>
-                            <h3 className="text-2xl font-semibold text-white">Your quiz results</h3>
-                          </div>
-                          <button
-                            onClick={handleReturnToStudy}
-                            className="inline-flex items-center justify-center rounded-2xl border border-slate-700/70 bg-slate-900/90 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-800"
-                          >
-                            Back to study set
-                          </button>
-                        </div>
-                        <QuizResults
-                          quizList={quizResults.quizList}
-                          answers={quizResults.answers}
-                          onRetryWrong={handleRetryQuizWrong}
-                          onRetryAll={handleRetryQuizAll}
-                        />
-                      </div>
-                    ) : activeTab === 'flashcards' ? (
+                    {activeTab === 'flashcards' ? (
                       <FlashcardView flashcards={data.flashcards} />
                     ) : (
-                      <QuizView initialQuiz={quizOverride ?? data.quiz} onComplete={handleQuizComplete} />
+                      <QuizView initialQuiz={data.quiz} />
                     )}
                   </div>
                 </motion.div>
