@@ -54,29 +54,25 @@ const schema = {
 };
 
 export default async function handler(req, res) {
+    const { text } = req.body || {};
+    if (!text || typeof text !== 'string') {
+        return res.status(400).json({ error: "Missing or invalid 'text' payload" });
+    }
+
     const hasKey = Boolean(process.env.GEMINI_API_KEY);
     let genAI;
-
-    // In non-production (development) mode, prefer returning a deterministic mock
-    // so local demos and testing work even when the Gemini API is unavailable or quota-limited.
-    if (process.env.NODE_ENV !== 'production') {
-        const { text } = req.body || {};
-        if (text && typeof text === 'string') {
-            return res.json(createMockStudySet(text));
-        }
-    }
 
     if (hasKey) {
         try {
             genAI = getGenAI();
         } catch (err) {
-            console.error(err);
-            // fallthrough to error response below
+            console.error('Gemini client initialization failed:', err);
         }
     }
-    const { text } = req.body;
-    if (!text || typeof text !== 'string') {
-        return res.status(400).json({ error: "Missing or invalid 'text' payload" });
+
+    if (!hasKey || !genAI) {
+        console.warn('No Gemini API key available or client init failed; returning mock study set.');
+        return res.json(createMockStudySet(text));
     }
 
     try {
@@ -109,17 +105,8 @@ ${text}`;
 
     } catch (error) {
         console.error("Gemini API error:", error);
-        // If running in development or no API key available, return a safe mock study set
-        if (process.env.NODE_ENV !== 'production') {
-            try {
-                const mock = createMockStudySet(text);
-                return res.json(mock);
-            } catch (e) {
-                console.error('Failed to generate mock study set', e);
-            }
-        }
-
-        res.status(500).json({ error: "Failed to generate study set", details: error.message });
+        const mock = createMockStudySet(text);
+        return res.json(mock);
     }
 }
 
