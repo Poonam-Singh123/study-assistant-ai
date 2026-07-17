@@ -57,7 +57,7 @@ export default function FlashcardView({ flashcards, currentIndex: controlledInde
       else if (e.key === 'ArrowLeft') handlePrev();
       else if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
-        setIsFlipped((prev) => !prev);
+        setFlipped((prev) => !prev);
       }
     };
 
