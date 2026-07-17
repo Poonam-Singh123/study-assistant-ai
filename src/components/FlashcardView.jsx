@@ -3,22 +3,35 @@ import { ChevronLeft, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion } from 'framer-motion';
 
-export default function FlashcardView({ flashcards }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [knownStatus, setKnownStatus] = useState({});
+export default function FlashcardView({ flashcards, currentIndex: controlledIndex, setCurrentIndex: setControlledIndex, isFlipped: controlledFlipped, setIsFlipped: setControlledFlipped, knownStatus: controlledKnownStatus, setKnownStatus: setControlledKnownStatus }) {
+  const isIndexControlled = controlledIndex !== undefined && typeof setControlledIndex === 'function';
+  const isFlippedControlled = controlledFlipped !== undefined && typeof setControlledFlipped === 'function';
+  const isKnownControlled = controlledKnownStatus !== undefined && typeof setControlledKnownStatus === 'function';
+
+  const [internalIndex, setInternalIndex] = useState(0);
+  const [internalFlipped, setInternalFlipped] = useState(false);
+  const [internalKnown, setInternalKnown] = useState({});
+
+  const currentIndex = isIndexControlled ? controlledIndex : internalIndex;
+  const setCurrentIndex = isIndexControlled ? setControlledIndex : setInternalIndex;
+
+  const isFlipped = isFlippedControlled ? controlledFlipped : internalFlipped;
+  const setFlipped = isFlippedControlled ? setControlledFlipped : setInternalFlipped;
+
+  const knownStatus = isKnownControlled ? controlledKnownStatus : internalKnown;
+  const setKnownStatus = isKnownControlled ? setControlledKnownStatus : setInternalKnown;
 
   const card = useMemo(() => flashcards[currentIndex] || flashcards[0], [flashcards, currentIndex]);
   const isKnown = card ? knownStatus[card.id] : false;
   const progress = useMemo(() => ((currentIndex + 1) / flashcards.length) * 100, [currentIndex, flashcards.length]);
 
   const handleNext = () => {
-    setIsFlipped(false);
+    setFlipped(false);
     setCurrentIndex((prev) => Math.min(prev + 1, flashcards.length - 1));
   };
 
   const handlePrev = () => {
-    setIsFlipped(false);
+    setFlipped(false);
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
   };
 
@@ -32,9 +45,10 @@ export default function FlashcardView({ flashcards }) {
   };
 
   useEffect(() => {
-    setCurrentIndex(0);
-    setIsFlipped(false);
-    setKnownStatus({});
+    // Reset internal state when flashcards change, unless parent controls it
+    if (!isIndexControlled) setInternalIndex(0);
+    if (!isFlippedControlled) setInternalFlipped(false);
+    if (!isKnownControlled) setInternalKnown({});
   }, [flashcards]);
 
   useEffect(() => {
@@ -67,11 +81,11 @@ export default function FlashcardView({ flashcards }) {
         className="w-full aspect-[4/3] sm:aspect-[16/9] perspective-1000 mb-10 cursor-pointer"
         role="button"
         tabIndex={0}
-        onClick={() => setIsFlipped((prev) => !prev)}
+        onClick={() => setFlipped((prev) => !prev)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            setIsFlipped((prev) => !prev);
+            setFlipped((prev) => !prev);
           }
         }}
         aria-label="Flashcard: press enter or space to flip"
@@ -141,8 +155,8 @@ export default function FlashcardView({ flashcards }) {
           </button>
         </div>
 
-        <button
-          onClick={toggleKnown}
+          <button
+            onClick={toggleKnown}
           className={cn(
             'inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition',
             isKnown

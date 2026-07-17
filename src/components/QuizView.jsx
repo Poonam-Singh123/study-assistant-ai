@@ -4,11 +4,24 @@ import { cn } from '../lib/utils';
 import QuizResults from './QuizResults';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function QuizView({ initialQuiz, onEnterNewNotes }) {
-    const [quizList, setQuizList] = useState(initialQuiz);
-    const [currentIdx, setCurrentIdx] = useState(0);
-    const [answers, setAnswers] = useState({}); // idx -> selectedOptionIndex
-    const [showResults, setShowResults] = useState(false);
+export default function QuizView({ initialQuiz, onEnterNewNotes, answers: controlledAnswers, setAnswers: setControlledAnswers, currentIdx: controlledIdx, setCurrentIdx: setControlledIdx, showResults: controlledShowResults, setShowResults: setControlledShowResults }) {
+    const isAnswersControlled = controlledAnswers !== undefined && typeof setControlledAnswers === 'function';
+    const isIdxControlled = controlledIdx !== undefined && typeof setControlledIdx === 'function';
+    const isShowResultsControlled = controlledShowResults !== undefined && typeof setControlledShowResults === 'function';
+
+    const [quizList] = useState(initialQuiz);
+    const [internalIdx, setInternalIdx] = useState(0);
+    const [internalAnswers, setInternalAnswers] = useState({}); // idx -> selectedOptionIndex
+    const [internalShowResults, setInternalShowResults] = useState(false);
+
+    const currentIdx = isIdxControlled ? controlledIdx : internalIdx;
+    const setCurrentIdx = isIdxControlled ? setControlledIdx : setInternalIdx;
+
+    const answers = isAnswersControlled ? controlledAnswers : internalAnswers;
+    const setAnswers = isAnswersControlled ? setControlledAnswers : setInternalAnswers;
+
+    const showResults = isShowResultsControlled ? controlledShowResults : internalShowResults;
+    const setShowResults = isShowResultsControlled ? setControlledShowResults : setInternalShowResults;
 
     const question = quizList[currentIdx];
     const hasAnsweredCurrent = answers[currentIdx] !== undefined;
@@ -39,14 +52,17 @@ export default function QuizView({ initialQuiz, onEnterNewNotes }) {
     };
 
     const resetQuiz = (newQuizList) => {
-        setQuizList(newQuizList);
+        // quizList is derived from initialQuiz in parent; we only reset indices/answers/showResults
         setCurrentIdx(0);
         setAnswers({});
         setShowResults(false);
     };
 
     useEffect(() => {
-        resetQuiz(initialQuiz);
+        // When parent provides a new initialQuiz, reset internal state (if uncontrolled)
+        if (!isIdxControlled) setInternalIdx(0);
+        if (!isAnswersControlled) setInternalAnswers({});
+        if (!isShowResultsControlled) setInternalShowResults(false);
     }, [initialQuiz]);
 
     // Keyboard navigation 1-4 for options and Enter for next

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
@@ -16,6 +16,15 @@ function App() {
   const [activeTab, setActiveTab] = useState('flashcards');
   const [lastInput, setLastInput] = useState('');
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  // Session state lifted to App
+  const [sessionId, setSessionId] = useState(null);
+  const [flashcardIndex, setFlashcardIndex] = useState(0);
+  const [flashcardFlipped, setFlashcardFlipped] = useState(false);
+  const [knownStatus, setKnownStatus] = useState({});
+
+  const [quizAnswers, setQuizAnswers] = useState({});
+  const [quizCurrentIdx, setQuizCurrentIdx] = useState(0);
+  const [quizShowResults, setQuizShowResults] = useState(false);
 
   const handleGenerate = (text) => {
     setLastInput(text);
@@ -41,12 +50,29 @@ function App() {
   const handleSubmitNewNotes = ({ topic, notes }) => {
     setShowDetailsModal(false);
     setLastInput(notes);
-    setQuizResults(null);
-    setQuizOverride(null);
+    // clear current data and start a fresh session
     setActiveTab('flashcards');
     generate(notes);
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 80);
   };
+
+  useEffect(() => {
+    if (!data) return;
+    // New study set arrived — initialize a fresh session
+    const id = Date.now();
+    setSessionId(id);
+
+    setFlashcardIndex(0);
+    setFlashcardFlipped(false);
+    setKnownStatus({});
+
+    setQuizAnswers({});
+    setQuizCurrentIdx(0);
+    setQuizShowResults(false);
+
+    // Smooth scroll to top of study section
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 80);
+  }, [data]);
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-50 overflow-x-hidden">
@@ -122,9 +148,28 @@ function App() {
 
                   <div className="relative">
                     {activeTab === 'flashcards' ? (
-                      <FlashcardView flashcards={data.flashcards} />
+                      <FlashcardView
+                        key={sessionId ? `flash-${sessionId}` : 'flash-default'}
+                        flashcards={data.flashcards}
+                        currentIndex={flashcardIndex}
+                        setCurrentIndex={setFlashcardIndex}
+                        isFlipped={flashcardFlipped}
+                        setIsFlipped={setFlashcardFlipped}
+                        knownStatus={knownStatus}
+                        setKnownStatus={setKnownStatus}
+                      />
                     ) : (
-                      <QuizView initialQuiz={data.quiz} onEnterNewNotes={handleEnterNewNotes} />
+                      <QuizView
+                        key={sessionId ? `quiz-${sessionId}` : 'quiz-default'}
+                        initialQuiz={data.quiz}
+                        answers={quizAnswers}
+                        setAnswers={setQuizAnswers}
+                        currentIdx={quizCurrentIdx}
+                        setCurrentIdx={setQuizCurrentIdx}
+                        showResults={quizShowResults}
+                        setShowResults={setQuizShowResults}
+                        onEnterNewNotes={handleEnterNewNotes}
+                      />
                     )}
                   </div>
                   <StudyDetailsModal open={showDetailsModal} onClose={() => setShowDetailsModal(false)} onSubmit={handleSubmitNewNotes} />
