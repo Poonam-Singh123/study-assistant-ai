@@ -1,155 +1,157 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion } from 'framer-motion';
 
 export default function FlashcardView({ flashcards }) {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [isFlipped, setIsFlipped] = useState(false);
-    const [knownStatus, setKnownStatus] = useState({}); // card.id -> boolean
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [knownStatus, setKnownStatus] = useState({});
 
-    const card = flashcards[currentIndex] || flashcards[0];
-    const isKnown = knownStatus[card.id];
+  const card = useMemo(() => flashcards[currentIndex] || flashcards[0], [flashcards, currentIndex]);
+  const isKnown = card ? knownStatus[card.id] : false;
+  const progress = useMemo(() => ((currentIndex + 1) / flashcards.length) * 100, [currentIndex, flashcards.length]);
 
-    const handleNext = () => {
-        setIsFlipped(false);
-        setCurrentIndex((prev) => Math.min(prev + 1, flashcards.length - 1));
+  const handleNext = () => {
+    setIsFlipped(false);
+    setCurrentIndex((prev) => Math.min(prev + 1, flashcards.length - 1));
+  };
+
+  const handlePrev = () => {
+    setIsFlipped(false);
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  const toggleKnown = (e) => {
+    e.stopPropagation();
+    if (!card) return;
+    setKnownStatus((prev) => ({
+      ...prev,
+      [card.id]: !prev[card.id],
+    }));
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') handleNext();
+      else if (e.key === 'ArrowLeft') handlePrev();
+      else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        setIsFlipped((prev) => !prev);
+      }
     };
 
-    const handlePrev = () => {
-        setIsFlipped(false);
-        setCurrentIndex((prev) => Math.max(prev - 1, 0));
-    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentIndex, flashcards.length]);
 
-    const toggleKnown = (e) => {
-        if (e) e.stopPropagation();
-        setKnownStatus(prev => ({
-            ...prev,
-            [card.id]: !prev[card.id]
-        }));
-    };
-
-    // Keyboard navigation
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'ArrowRight') handleNext();
-            else if (e.key === 'ArrowLeft') handlePrev();
-            else if (e.key === ' ' || e.key === 'Enter') {
-                e.preventDefault();
-                setIsFlipped(prev => !prev);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentIndex, flashcards.length]);
-
-    return (
-        <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
-
-            {/* 3D Flip Container */}
-            <div
-                className="w-full aspect-[4/3] sm:aspect-[16/9] perspective-1000 mb-10 cursor-pointer group"
-                onClick={() => setIsFlipped(!isFlipped)}
-            >
-                <motion.div
-                    className="w-full h-full relative preserve-3d transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-2xl rounded-3xl"
-                    initial={false}
-                    animate={{ rotateX: isFlipped ? 180 : 0 }}
-                    style={{ transformStyle: 'preserve-3d' }}
-                >
-                    {/* FRONT */}
-                    <div
-                        className="absolute inset-0 backface-hidden bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl border border-slate-700/80 p-10 flex flex-col justify-center items-center text-center shadow-inner"
-                        style={{ backfaceVisibility: 'hidden' }}
-                    >
-                        <div className="absolute top-6 right-6 text-xs font-semibold uppercase tracking-widest text-indigo-400 bg-indigo-400/10 px-3 py-1.5 rounded-full">
-                            Front
-                        </div>
-                        <h3 className="text-3xl sm:text-4xl font-semibold text-white group-hover:scale-[1.02] transition-transform duration-500 bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-300">
-                            {card.front}
-                        </h3>
-                        <div className="absolute bottom-6 flex flex-col items-center gap-2">
-                            <span className="text-xs text-slate-500 uppercase tracking-widest opacity-60">
-                                Press Space to flip
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* BACK */}
-                    <div
-                        className="absolute inset-0 backface-hidden bg-gradient-to-br from-indigo-950/80 to-slate-900 rounded-3xl border border-indigo-500/30 p-10 flex flex-col justify-center items-center text-center shadow-lg shadow-indigo-900/20"
-                        style={{ backfaceVisibility: 'hidden', transform: 'rotateX(180deg)' }}
-                    >
-                        <div className="absolute top-6 right-6 text-xs font-semibold uppercase tracking-widest text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-full">
-                            Back
-                        </div>
-                        <div className="overflow-y-auto max-h-full scrollbar-thin w-full px-4">
-                            <p className="text-xl sm:text-2xl text-slate-100 leading-relaxed font-light mt-4">
-                                {card.back}
-                            </p>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-
-            {/* Modern Controls */}
-            <div className="flex flex-col w-full gap-6">
-                {/* Progress Bar */}
-                <div className="flex items-center gap-4 w-full">
-                    <span className="text-xs font-medium text-slate-500 w-8 text-right">
-                        01
-                    </span>
-                    <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden flex gap-0.5">
-                        {flashcards.map((_, i) => (
-                            <div
-                                key={i}
-                                className={cn(
-                                    "h-full flex-1 transition-all duration-300 rounded-sm",
-                                    i <= currentIndex ? "bg-indigo-500" : "bg-slate-700/50"
-                                )}
-                            />
-                        ))}
-                    </div>
-                    <span className="text-xs font-medium text-slate-500 w-8">
-                        {String(flashcards.length).padStart(2, '0')}
-                    </span>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex items-center justify-between w-full">
-                    <button
-                        onClick={handlePrev}
-                        disabled={currentIndex === 0}
-                        className="flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 disabled:opacity-30 disabled:pointer-events-none transition-all Group"
-                    >
-                        <ChevronLeft className="w-5 h-5 text-slate-300" />
-                        <span className="hidden sm:inline font-medium text-slate-300">Previous</span>
-                    </button>
-
-                    <button
-                        onClick={toggleKnown}
-                        className={cn(
-                            "flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all shadow-lg active:scale-95",
-                            isKnown
-                                ? "bg-emerald-500 text-slate-950 shadow-emerald-500/25"
-                                : "bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700"
-                        )}
-                    >
-                        {isKnown ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 text-slate-400" />}
-                        {isKnown ? "Got it" : "Mark as learned"}
-                    </button>
-
-                    <button
-                        onClick={handleNext}
-                        disabled={currentIndex === flashcards.length - 1}
-                        className="flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 disabled:opacity-30 disabled:pointer-events-none transition-all Group"
-                    >
-                        <span className="hidden sm:inline font-medium text-slate-300">Next</span>
-                        <ChevronRight className="w-5 h-5 text-slate-300" />
-                    </button>
-                </div>
-            </div>
+  return (
+    <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
+      <div className="mb-6 flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-sm text-slate-400">
+        <div className="rounded-2xl border border-slate-800/70 bg-slate-900/90 px-4 py-3 shadow-inner">
+          <span className="font-semibold text-slate-100">Card {currentIndex + 1}</span>
+          <span className="ml-2">/ {flashcards.length}</span>
         </div>
-    );
+        <div className="rounded-2xl border border-slate-800/70 bg-slate-900/90 px-4 py-3 shadow-inner">
+          <span className="font-medium text-slate-300">{isKnown ? 'Known' : 'Still learning'}</span>
+        </div>
+      </div>
+
+      <div
+        className="w-full aspect-[4/3] sm:aspect-[16/9] perspective-1000 mb-10 cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onClick={() => setIsFlipped((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsFlipped((prev) => !prev);
+          }
+        }}
+        aria-label="Flashcard: press enter or space to flip"
+      >
+        <motion.div
+          className="w-full h-full relative preserve-3d rounded-[2rem] shadow-2xl"
+          initial={false}
+          animate={{ rotateX: isFlipped ? 180 : 0 }}
+          transition={{ duration: 0.75, ease: [0.23, 1, 0.32, 1] }}
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          <div
+            className="absolute inset-0 backface-hidden rounded-[2rem] border border-slate-800/70 bg-gradient-to-br from-slate-900 to-slate-950 p-10 flex flex-col justify-between text-center shadow-inner"
+            style={{ backfaceVisibility: 'hidden' }}
+          >
+            <div className="flex items-center justify-between gap-4 text-left">
+              <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs uppercase tracking-[0.3em] text-indigo-300">
+                front
+              </span>
+              <span className="text-xs text-slate-500">Tap or press space</span>
+            </div>
+            <div className="mt-4 flex grow items-center justify-center">
+              <h3 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
+                {card.front}
+              </h3>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-slate-500">Flip to reveal the answer.</p>
+            </div>
+          </div>
+
+          <div
+            className="absolute inset-0 backface-hidden rounded-[2rem] border border-indigo-500/20 bg-gradient-to-br from-indigo-950/90 to-slate-900 p-10 flex flex-col justify-between text-center shadow-2xl"
+            style={{ backfaceVisibility: 'hidden', transform: 'rotateX(180deg)' }}
+          >
+            <div className="flex items-center justify-between gap-4 text-left">
+              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs uppercase tracking-[0.3em] text-emerald-300">
+                back
+              </span>
+              <span className="text-xs text-slate-500">Press space to flip back</span>
+            </div>
+            <div className="mt-4 flex grow items-center justify-center overflow-hidden">
+              <p className="text-xl leading-8 text-slate-100 sm:text-2xl">{card.back}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-slate-500">Review and mark when mastered.</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className="flex-1 rounded-2xl border border-slate-800/70 bg-slate-900 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-indigo-500/40 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={currentIndex === flashcards.length - 1}
+            className="flex-1 rounded-2xl border border-slate-800/70 bg-slate-900 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-indigo-500/40 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+
+        <button
+          onClick={toggleKnown}
+          className={cn(
+            'inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition',
+            isKnown
+              ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/20'
+              : 'bg-slate-900 border border-slate-800/70 text-slate-100 hover:bg-slate-800'
+          )}
+        >
+          {isKnown ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4 text-slate-400" />}
+          {isKnown ? 'Known' : 'Still learning'}
+        </button>
+      </div>
+
+      <div className="mt-6 w-full overflow-hidden rounded-full bg-slate-900/90 border border-slate-800/80 shadow-inner">
+        <div className="h-2 rounded-full bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-cyan-400 transition-all duration-500" style={{ width: `${progress}%` }} />
+      </div>
+    </div>
+  );
 }

@@ -1,108 +1,96 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Target, RotateCcw, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function QuizResults({ quizList, answers, onRetryWrong, onRetryAll }) {
-    let score = 0;
-    quizList.forEach((q, i) => {
-        if (answers[i] === q.correctIndex) {
-            score++;
-        }
-    });
+  const { score, percentage, perfect } = useMemo(() => {
+    const total = quizList.length;
+    const currentScore = quizList.reduce((acc, q, idx) => acc + (answers[idx] === q.correctIndex ? 1 : 0), 0);
+    return {
+      score: currentScore,
+      percentage: Math.round((currentScore / total) * 100),
+      perfect: currentScore === total,
+    };
+  }, [quizList, answers]);
 
-    const percentage = Math.round((score / quizList.length) * 100);
-    const perfect = score === quizList.length;
+  useEffect(() => {
+    if (!perfect) return;
 
-    useEffect(() => {
-        if (perfect) {
-            const duration = 3 * 1000;
-            const end = Date.now() + duration;
+    const duration = 2700;
+    const end = Date.now() + duration;
 
-            const frame = () => {
-                confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 },
-                    colors: ['#818CF8', '#34D399']
-                });
-                confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 },
-                    colors: ['#818CF8', '#34D399']
-                });
+    const frame = () => {
+      confetti({
+        particleCount: 6,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#818CF8', '#34D399'],
+      });
+      confetti({
+        particleCount: 6,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#818CF8', '#34D399'],
+      });
 
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                }
-            };
-            frame();
-        }
-    }, [perfect]);
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
 
-    return (
-        <div className="max-w-lg mx-auto flex flex-col items-center text-center py-12 px-6 bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
+    frame();
+  }, [perfect]);
 
-            {perfect && (
-                <div className="absolute top-0 left-0 w-full h-full bg-indigo-500/5 mix-blend-screen pointer-events-none" />
-            )}
-
-            <div className="w-32 h-32 bg-slate-800 rounded-full flex items-center justify-center mb-8 border-4 border-slate-700 relative shadow-inner">
-                {perfect ? <Sparkles className="w-12 h-12 text-emerald-400" /> : <Target className="w-12 h-12 text-indigo-400" />}
-
-                {/* SVG Circle for score */}
-                <svg className="absolute inset-0 w-full h-full -rotate-90">
-                    <circle
-                        cx="60"
-                        cy="60"
-                        r="58"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        className="text-slate-800"
-                    />
-                    <circle
-                        cx="60"
-                        cy="60"
-                        r="58"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        className={perfect ? "text-emerald-500 transition-all duration-1500 ease-out" : "text-indigo-500 transition-all duration-1000 ease-out"}
-                        strokeDasharray={`${(percentage / 100) * 364} 364`}
-                    />
-                </svg>
-            </div>
-
-            <h3 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-3">
-                {score} / {quizList.length}
-            </h3>
-            <p className="text-slate-400 mb-12 text-lg">
-                {perfect ? "Outstanding! You have mastered this material." : "Great effort. Review the ones you missed and try again."}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 w-full">
-                {!perfect && (
-                    <button
-                        onClick={onRetryWrong}
-                        className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400
-                       text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-500/25 active:scale-95"
-                    >
-                        <RotateCcw className="w-5 h-5" />
-                        Retry Wrong Answers
-                    </button>
-                )}
-                <button
-                    onClick={onRetryAll}
-                    className="flex-1 px-6 py-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-slate-500
-                     text-slate-200 font-medium flex items-center justify-center gap-2 transition-all active:scale-95"
-                >
-                    {perfect ? <RotateCcw className="w-5 h-5 text-slate-400" /> : null}
-                    {perfect ? "Retake Quiz" : "Start Over"}
-                </button>
-            </div>
+  return (
+    <div className="mx-auto max-w-3xl overflow-hidden rounded-[2rem] border border-slate-800/70 bg-slate-950/95 p-10 shadow-2xl shadow-indigo-500/10">
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-slate-900/90 ring-1 ring-slate-700/80 shadow-lg shadow-slate-950/30">
+          {perfect ? <Sparkles className="h-12 w-12 text-emerald-400" /> : <Target className="h-12 w-12 text-indigo-400" />}
+          <div className="absolute inset-0 rounded-full border border-slate-700/60" />
         </div>
-    );
+
+        <div className="space-y-3">
+          <p className="text-sm uppercase tracking-[0.26em] text-indigo-400">Quiz Results</p>
+          <h2 className="text-5xl font-semibold text-white">{percentage}%</h2>
+          <p className="text-lg text-slate-400">{perfect ? 'A perfect score — well done!' : 'Nice work — keep practicing and refine your recall.'}</p>
+        </div>
+      </div>
+
+      <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/90 p-5 text-center">
+          <p className="text-sm text-slate-400">Correct</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{score}</p>
+        </div>
+        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/90 p-5 text-center">
+          <p className="text-sm text-slate-400">Total</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{quizList.length}</p>
+        </div>
+        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/90 p-5 text-center">
+          <p className="text-sm text-slate-400">Score</p>
+          <p className="mt-3 text-3xl font-semibold text-white">{percentage}%</p>
+        </div>
+      </div>
+
+      <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        {!perfect && (
+          <button
+            onClick={onRetryWrong}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 py-4 text-sm font-semibold text-white transition hover:from-indigo-500 hover:to-indigo-400"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Retry wrong answers
+          </button>
+        )}
+        <button
+          onClick={onRetryAll}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-700/80 bg-slate-900/90 px-6 py-4 text-sm font-semibold text-slate-100 transition hover:bg-slate-800"
+        >
+          <RotateCcw className="h-4 w-4" />
+          {perfect ? 'Retake quiz' : 'Try again'}
+        </button>
+      </div>
+    </div>
+  );
 }

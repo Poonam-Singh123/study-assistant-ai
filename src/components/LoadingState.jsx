@@ -2,28 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 export default function LoadingState() {
-    const [showTimeoutText, setShowTimeoutText] = useState(false);
+  const [showTimeoutText, setShowTimeoutText] = useState(false);
 
-    useEffect(() => {
-        // Show "Still working..." text after 10 seconds
-        const timer = setTimeout(() => {
-            setShowTimeoutText(true);
-        }, 10000);
-        return () => clearTimeout(timer);
-    }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTimeoutText(true);
+    }, 9000);
+    return () => clearTimeout(timer);
+  }, []);
 
-    return (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="relative mb-8">
-                <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full" />
-                <Loader2 className="w-12 h-12 text-indigo-400 animate-spin relative" />
-            </div>
-            <h3 className="text-xl font-medium text-slate-50 mb-2 animate-pulse">
-                Studying your notes...
-            </h3>
-            <p className="text-slate-400 min-h-[1.5rem] transition-opacity duration-500">
-                {showTimeoutText ? "Still working... this is a lot of information!" : "Crafting your flashcards and quiz"}
-            </p>
+  return (
+    <div className="mx-auto max-w-4xl rounded-[2rem] border border-slate-800/70 bg-slate-950/95 p-10 shadow-2xl shadow-indigo-500/10">
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-indigo-500/10 shadow-inner shadow-indigo-500/10">
+          <Loader2 className="h-12 w-12 text-indigo-300 animate-spin" />
         </div>
-    );
+        <div>
+          <p className="text-xl font-semibold text-white">Generating your personalized study set...</p>
+          <p className="mt-3 text-sm leading-7 text-slate-400">
+            We’re turning your notes into flashcards and quiz questions. This should only take a few seconds.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-10 space-y-4">
+        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/90 p-5">
+          <div className="h-3.5 w-full rounded-full bg-slate-800">
+            <div className="h-3.5 w-3/4 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 animate-pulse" />
+          </div>
+          <p className="mt-3 text-sm text-slate-400">Preparing structured flashcards and quiz prompts.</p>
+        </div>
+        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/90 p-5">
+          <p className="text-sm text-slate-400">{showTimeoutText ? 'Still working through your content — thanks for your patience.' : 'Almost there…'}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
