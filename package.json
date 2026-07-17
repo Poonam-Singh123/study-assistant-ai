@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "concurrently \"node server.js\" \"vite\"",
     "build": "vite build",
-    "lint": "oxlint",
+    "start": "node server.js",
     "preview": "vite preview",
-    "start": "concurrently \"node server.js\" \"vite\""
+    "lint": "oxlint"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

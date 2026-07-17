@@ -2,7 +2,13 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+function getGenAI() {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) {
+        throw new Error('GEMINI_API_KEY not set');
+    }
+    return new GoogleGenerativeAI(key);
+}
 
 const schema = {
     description: "A study set containing a topic, flashcards, and a quiz.",
@@ -51,7 +57,13 @@ export default async function handler(req, res) {
     if (!process.env.GEMINI_API_KEY) {
         return res.status(500).json({ error: "Server missing GEMINI_API_KEY" });
     }
-
+    let genAI;
+    try {
+        genAI = getGenAI();
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Server misconfiguration: GEMINI_API_KEY' });
+    }
     const { text } = req.body;
     if (!text || typeof text !== 'string') {
         return res.status(400).json({ error: "Missing or invalid 'text' payload" });
