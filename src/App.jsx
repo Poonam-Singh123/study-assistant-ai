@@ -9,11 +9,13 @@ import ErrorState from './components/ErrorState';
 import FlashcardView from './components/FlashcardView';
 import QuizView from './components/QuizView';
 import { useGenerateStudySet } from './hooks/useGenerateStudySet';
+import StudyDetailsModal from './components/StudyDetailsModal';
 
 function App() {
   const { generate, data, loading, error, clearData, setError } = useGenerateStudySet();
   const [activeTab, setActiveTab] = useState('flashcards');
   const [lastInput, setLastInput] = useState('');
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const handleGenerate = (text) => {
     setLastInput(text);
@@ -32,10 +34,17 @@ function App() {
   };
 
   const handleEnterNewNotes = () => {
-    clearData();
-    setError(null);
-    setLastInput('');
+    // open modal to enter new notes
+    setShowDetailsModal(true);
+  };
+
+  const handleSubmitNewNotes = ({ topic, notes }) => {
+    setShowDetailsModal(false);
+    setLastInput(notes);
+    setQuizResults(null);
+    setQuizOverride(null);
     setActiveTab('flashcards');
+    generate(notes);
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 80);
   };
 
@@ -118,6 +127,7 @@ function App() {
                       <QuizView initialQuiz={data.quiz} onEnterNewNotes={handleEnterNewNotes} />
                     )}
                   </div>
+                  <StudyDetailsModal open={showDetailsModal} onClose={() => setShowDetailsModal(false)} onSubmit={handleSubmitNewNotes} />
                 </motion.div>
               )}
             </AnimatePresence>
