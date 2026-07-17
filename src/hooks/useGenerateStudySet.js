@@ -2,25 +2,13 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { validateStudySet } from '../lib/validateStudySet';
 
 export function useGenerateStudySet() {
-    const [data, setData] = useState(() => {
-        const saved = localStorage.getItem('studyAssistantData');
-        if (saved) {
-            try { return JSON.parse(saved); } catch (e) { return null; }
-        }
-        return null;
-    });
+    // No persistence: always start with a fresh session on load
+    const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const abortControllerRef = useRef(null);
 
-    // Save to local storage whenever data changes
-    useEffect(() => {
-        if (data) {
-            localStorage.setItem('studyAssistantData', JSON.stringify(data));
-        } else {
-            localStorage.removeItem('studyAssistantData');
-        }
-    }, [data]);
+    // Intentionally no persistence: do not save study sets to localStorage
 
     const generate = useCallback(async (text) => {
         if (abortControllerRef.current) {
