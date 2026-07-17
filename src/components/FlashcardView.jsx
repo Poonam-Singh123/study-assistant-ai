@@ -32,6 +32,12 @@ export default function FlashcardView({ flashcards }) {
   };
 
   useEffect(() => {
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setKnownStatus({});
+  }, [flashcards]);
+
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight') handleNext();
       else if (e.key === 'ArrowLeft') handlePrev();

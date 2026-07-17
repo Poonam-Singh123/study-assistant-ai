@@ -45,6 +45,10 @@ export default function QuizView({ initialQuiz }) {
         setShowResults(false);
     };
 
+    useEffect(() => {
+        resetQuiz(initialQuiz);
+    }, [initialQuiz]);
+
     // Keyboard navigation 1-4 for options and Enter for next
     useEffect(() => {
         const handleKeyDown = (e) => {
