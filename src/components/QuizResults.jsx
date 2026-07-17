@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Target, RotateCcw, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function QuizResults({ quizList, answers, onRetryWrong, onRetryAll }) {
+export default function QuizResults({ quizList, answers, onRetryWrong, onRetryAll, onEnterNewNotes }) {
   const { score, percentage, perfect } = useMemo(() => {
     const total = quizList.length;
     const currentScore = quizList.reduce((acc, q, idx) => acc + (answers[idx] === q.correctIndex ? 1 : 0), 0);
@@ -73,23 +73,35 @@ export default function QuizResults({ quizList, answers, onRetryWrong, onRetryAl
         </div>
       </div>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2">
-        {!perfect && (
+      <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-3 w-full sm:w-auto">
+          {!perfect && (
+            <button
+              onClick={onRetryWrong}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 py-4 text-sm font-semibold text-white transition hover:from-indigo-500 hover:to-indigo-400"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Retry wrong answers
+            </button>
+          )}
+
           <button
-            onClick={onRetryWrong}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 py-4 text-sm font-semibold text-white transition hover:from-indigo-500 hover:to-indigo-400"
+            onClick={onRetryAll}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-700/80 bg-slate-900/90 px-6 py-4 text-sm font-semibold text-slate-100 transition hover:bg-slate-800"
           >
             <RotateCcw className="h-4 w-4" />
-            Retry wrong answers
+            {perfect ? 'Retake quiz' : 'Try again'}
           </button>
-        )}
-        <button
-          onClick={onRetryAll}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-700/80 bg-slate-900/90 px-6 py-4 text-sm font-semibold text-slate-100 transition hover:bg-slate-800"
-        >
-          <RotateCcw className="h-4 w-4" />
-          {perfect ? 'Retake quiz' : 'Try again'}
-        </button>
+        </div>
+
+        <div className="flex w-full sm:w-auto">
+          <button
+            onClick={onEnterNewNotes}
+            className="ml-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600/80 hover:bg-rose-600 px-6 py-4 text-sm font-semibold text-white transition"
+          >
+            Enter new notes
+          </button>
+        </div>
       </div>
     </div>
   );

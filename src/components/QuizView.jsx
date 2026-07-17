@@ -4,7 +4,7 @@ import { cn } from '../lib/utils';
 import QuizResults from './QuizResults';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function QuizView({ initialQuiz }) {
+export default function QuizView({ initialQuiz, onEnterNewNotes }) {
     const [quizList, setQuizList] = useState(initialQuiz);
     const [currentIdx, setCurrentIdx] = useState(0);
     const [answers, setAnswers] = useState({}); // idx -> selectedOptionIndex
@@ -73,6 +73,7 @@ export default function QuizView({ initialQuiz }) {
                 answers={answers}
                 onRetryWrong={handleRetryWrong}
                 onRetryAll={() => resetQuiz(initialQuiz)}
+                onEnterNewNotes={onEnterNewNotes}
             />
         );
     }

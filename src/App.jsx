@@ -31,6 +31,14 @@ function App() {
     setError(null);
   };
 
+  const handleEnterNewNotes = () => {
+    clearData();
+    setError(null);
+    setLastInput('');
+    setActiveTab('flashcards');
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 80);
+  };
+
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-50 overflow-x-hidden">
       <Navbar />
@@ -107,7 +115,7 @@ function App() {
                     {activeTab === 'flashcards' ? (
                       <FlashcardView flashcards={data.flashcards} />
                     ) : (
-                      <QuizView initialQuiz={data.quiz} />
+                      <QuizView initialQuiz={data.quiz} onEnterNewNotes={handleEnterNewNotes} />
                     )}
                   </div>
                 </motion.div>
